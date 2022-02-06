@@ -9,20 +9,6 @@ import (
 	"strings"
 )
 
-type RefreshForm struct {
-	ClientId     string
-	ClientSecret string
-	RefreshToken string
-	GrantType    string
-}
-
-type RefreshResponse struct {
-	AccessToken string `json:"access_token"`
-	ExpiresIn   int    `json:"expires_in"`
-	Scope       string `json:"scope"`
-	TokenType   string `json:"token_type"`
-}
-
 func (authFlow *AuthFlow) SubmitRefreshForm(clientSecret ClientSecret, exchangeResponse TokenResponse) error {
 
 	refreshForm := new(RefreshForm)

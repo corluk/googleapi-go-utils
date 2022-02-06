@@ -6,103 +6,176 @@ import (
 	"net/url"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
-type Credentials struct {
-	ClientId  string `json:"client_id"`
-	ProjectId string `json:"project_id"`
-
-	AuthUri                 string   `json:"auth_uri"`
-	TokenUri                string   `json:"token_uri"`
-	AuthProviderX509CertUrl string   `json:"auth_provider_x509_cert_url"`
-	RedirectUris            []string `json:"redirect_uris"`
-
-	ClientSecret string `json:"client_secret"`
-	ApiKey       string `json:"apiKey"`
-}
-type ClientSecret struct {
-	Installed Credentials `json:"installed"`
-}
-
-type AuthUrlForm struct {
-	ClientId             string
-	RedirectUri          *string
-	Scopes               []string
-	AccessType           string
-	IncludeGrantedScopes string
-	ResponseType         *string
-	Url                  *url.URL
-}
-
-func (authFlow AuthFlow) GetUrl() (string, error) {
-
-	if authFlow.AuthUrlForm == nil {
-		authFlow.AuthUrlForm = new(AuthUrlForm)
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
 	}
+	return false
+}
+func setPrompt(loginUrl RequestLoginUrl, q url.Values) error {
+
+	if len(loginUrl.Prompt) > 0 {
+
+		for _, prompt := range loginUrl.Prompt {
+
+			switch prompt {
+			case "none":
+			case "consent":
+			case "select_account":
+				break
+			default:
+				return errors.New("unknown prompt " + prompt)
+				break
+			}
+		}
+		q.Add("prompt", strings.Join(loginUrl.Prompt, " "))
+	}
+	return nil
+}
+func setLoginHint(loginUrl RequestLoginUrl, q url.Values) {
+
+	if strings.TrimSpace(loginUrl.LoginHint) != "" {
+		q.Add("login_hint", loginUrl.LoginHint)
+	}
+
+}
+func setAccessType(loginUrl RequestLoginUrl, q url.Values) error {
+
+	var accessType string = "online"
+	switch loginUrl.AccessType {
+	case "offline":
+	case "online":
+		accessType = loginUrl.AccessType
+		break
+	default:
+		return errors.New("wrong type of access type set please  select online or offline")
+		break
+	}
+	q.Add("access_type", accessType)
+	return nil
+
+}
+
+func setIncludeGrantedScopes(loginUrl RequestLoginUrl, q url.Values) {
+	var value bool = true
+	if loginUrl.IncludeGrantedScopes != nil {
+
+		value = *loginUrl.IncludeGrantedScopes
+
+	}
+	q.Add("include_granted_scopes", strconv.FormatBool(value))
+}
+func setState(loginUrl RequestLoginUrl, q url.Values) {
+
+	if strings.TrimSpace(loginUrl.State) != "" {
+		q.Add("state", loginUrl.State)
+	}
+}
+func setScope(loginUrl RequestLoginUrl, q url.Values) error {
+
+	if len(loginUrl.Scope) < 1 {
+		return errors.New("You must set at least one Scope")
+	}
+	q.Add("scope", strings.Join(loginUrl.Scope, " "))
+	return nil
+
+}
+func setRedirectUri(loginUrl RequestLoginUrl, q url.Values) error {
+
+	if strings.TrimSpace(loginUrl.RedirectURI) == "" {
+		return errors.New("You must set redirect URI")
+	}
+	q.Add("redirect_uri", loginUrl.RedirectURI)
+	return nil
+}
+func setClientId(loginUrl RequestLoginUrl, q url.Values) error {
+
+	if strings.TrimSpace(loginUrl.ClientId) == "" {
+		return errors.New("ClientId must set")
+	}
+	q.Add("client_id", loginUrl.ClientId)
+	return nil
+}
+func setResponseType(loginUrl RequestLoginUrl, q url.Values) {
+	var responseType string = "code"
+	switch loginUrl.ResponseType {
+
+	case "code":
+		responseType = "code"
+
+	}
+	q.Add("response_type", responseType)
+
+}
+func (loginUrl RequestLoginUrl) GetUrl() (*url.URL, error) {
 
 	uri, err := url.Parse("https://accounts.google.com/o/oauth2/v2/auth")
 
 	if err != nil {
-		return "", err
+		return uri, err
 	}
 
 	q := uri.Query()
 
-	responseType := authFlow.AuthUrlForm.ResponseType
-	if responseType == nil {
-		code := "code"
-		responseType = &code
-	}
-	redirectUri := authFlow.RedirectUri
-	if redirectUri == nil {
-		redirectUri = &authFlow.ClientSecret.Installed.RedirectUris[0]
-	}
-	scopes := authFlow.Scopes
-	if scopes == nil {
-		return "", errors.New("you must set scopes before requesting url ")
+	err = setClientId(loginUrl, q)
+	if err != nil {
+		return uri, err
 	}
 
-	q.Add("client_id", authFlow.ClientSecret.Installed.ClientId)
-	q.Add("redirect_uri", *redirectUri)
+	err = setRedirectUri(loginUrl, q)
+	if err != nil {
+		return uri, err
+	}
+	setResponseType(loginUrl, q)
 
-	q.Add("scope", strings.Join(*scopes, ","))
-	q.Add("access_type", authFlow.AuthUrlForm.AccessType)
-	q.Add("include_granted_scopes", authFlow.AuthUrlForm.IncludeGrantedScopes)
-	q.Add("response_type", *responseType)
+	err = setScope(loginUrl, q)
+	if err != nil {
+		return uri, err
+	}
+
+	err = setAccessType(loginUrl, q)
+	if err != nil {
+		return uri, err
+	}
+	setState(loginUrl, q)
+	setIncludeGrantedScopes(loginUrl, q)
+	setLoginHint(loginUrl, q)
+	err = setPrompt(loginUrl, q)
+	if err != nil {
+		return uri, err
+	}
 
 	uri.RawQuery = q.Encode()
-	return uri.String(), nil
+	return uri, nil
 }
 
-func (authFlow *AuthFlow) OpenBrowser() error {
+func OpenBrowser(url string) error {
 
-	url, err := authFlow.GetUrl()
-	if err != nil {
-		return err
-	}
 	fmt.Println(url)
 	switch runtime.GOOS {
 	case "linux":
-		err = exec.Command("xdg-open", url).Start()
+		err := exec.Command("xdg-open", url).Start()
 		if err != nil {
 			return err
 		}
 	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+		err := exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
 		if err != nil {
 			return err
 		}
 	case "darwin":
-		err = exec.Command("open", url).Start()
+		err := exec.Command("open", url).Start()
 		if err != nil {
 			return err
 		}
 	default:
 		return errors.New("cannot detect browser")
-	}
-	if err != nil {
-		return err
 	}
 
 	return nil

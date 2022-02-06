@@ -1,0 +1,14 @@
+GET http://localhost:8080/api/google/login/url 
+Content-Type: application/json 
+
+{
+    "client_id" : "12345", 
+    "redirect_uri" : "http://google.com", 
+    "response_type" : "code" ,  
+    "scope" : ["https://www.googleapis.com/auth/youtube.readonly","https://www.googleapis.com/auth/youtube.upload"],
+    "access_type" : "offline" , 
+    "state" : "some state" , 
+    "include_granted_scopes" : true , 
+    "login_hint" : "someloginhint", 
+    "prompt" : ["none"]
+}

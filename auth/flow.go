@@ -11,31 +11,6 @@ import (
 	"strings"
 )
 
-type TokenForm struct {
-	Code         string  `json:"code"`
-	ClientId     string  `json:"client_id"`
-	ClientSecret string  `json:"client_secret"`
-	RedirectUri  *string `json:"redirect_uri"`
-	GrantType    string  `json:"grant_type"`
-}
-
-type TokenResponse struct {
-	ID           string `json:"_id"`
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	Scope        string `json:"scope"`
-	ExpiresIn    int    `json:"expires_in"`
-}
-
-type AuthFlow struct {
-	ExchangeForm     *TokenForm
-	ExchangeResponse *TokenResponse
-	ClientSecret     *ClientSecret
-	Scopes           *[]string
-	RedirectUri      *string
-	AuthUrlForm      *AuthUrlForm
-	RefreshForm      *RefreshForm
-}
 
 func (authFlow *AuthFlow) SaveToken(path string) error {
 
