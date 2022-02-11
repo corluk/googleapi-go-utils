@@ -2,14 +2,15 @@ package server
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/corluk/googleapi-go-utils/auth"
 	"github.com/gin-gonic/gin"
 )
 
-func Login(r *gin.Engine) {
+func GetUrl(r *gin.Engine) {
 
-	r.GET("/api/google/login/url", func(c *gin.Context) {
+	r.GET("/api/google/auth/geturl/", func(c *gin.Context) {
 		var requestLoginUrl auth.RequestLoginUrl
 
 		err := c.BindJSON(&requestLoginUrl)
@@ -23,9 +24,25 @@ func Login(r *gin.Engine) {
 			c.String(401, fmt.Sprintf("message %s", err))
 			return
 		}
-
-		c.String(200, url.String())
+		responseCode := new(ResponseGetUrl)
+		responseCode.Time = time.Now()
+		responseCode.URL = url.String()
+		c.JSON(200, &responseCode)
 
 	})
 
+}
+
+func ExchangeCode(r *gin.Engine) {
+
+	r.GET("/api/google/auth/exchangecode/", func(c *gin.Context) {
+
+	})
+}
+
+func RefreshToken(r *gin.Engine){
+	r.GET("/api/google/auth/refreshcode/", func(c *gin.Context) {
+
+		
+	})
 }

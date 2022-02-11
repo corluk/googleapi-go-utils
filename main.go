@@ -8,7 +8,7 @@ import (
 func main() {
 
 	r := gin.Default()
-	server.Login(r)
+	server.GetUrl(r)
 	
 	r.Run()
 }

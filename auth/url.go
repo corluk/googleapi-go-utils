@@ -47,7 +47,7 @@ func setLoginHint(loginUrl RequestLoginUrl, q url.Values) {
 }
 func setAccessType(loginUrl RequestLoginUrl, q url.Values) error {
 
-	var accessType string = "online"
+	var accessType string = "offline"
 	switch loginUrl.AccessType {
 	case "offline":
 	case "online":
@@ -55,7 +55,7 @@ func setAccessType(loginUrl RequestLoginUrl, q url.Values) error {
 		break
 	default:
 		return errors.New("wrong type of access type set please  select online or offline")
-		break
+
 	}
 	q.Add("access_type", accessType)
 	return nil

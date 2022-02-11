@@ -1,14 +1,21 @@
-GET http://localhost:8080/api/google/login/url 
+@code = "4/1AX4XfWjLE_c9AJ7W6iJWO3wSEf5rdaewSuPBY0kd2JW3RtlEaEeJioZjsoQ"
+GET http://localhost:8080/api/google/auth/geturl/
 Content-Type: application/json 
 
 {
-    "client_id" : "12345", 
-    "redirect_uri" : "http://google.com", 
+    "client_id" : "369850819376-gppd8ftsa73va37p0ovnan8m1dc9usc5.apps.googleusercontent.com",
+    "redirect_uri" : "urn:ietf:wg:oauth:2.0:oob", 
     "response_type" : "code" ,  
     "scope" : ["https://www.googleapis.com/auth/youtube.readonly","https://www.googleapis.com/auth/youtube.upload"],
     "access_type" : "offline" , 
     "state" : "some state" , 
     "include_granted_scopes" : true , 
     "login_hint" : "someloginhint", 
-    "prompt" : ["none"]
+    "prompt" : []
 }
+
+### 
+
+
+
+
